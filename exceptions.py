@@ -1,0 +1,2 @@
+class DatacontainerLoadError( Exception ):
+    pass
