@@ -126,6 +126,7 @@ class plysurfacehandler():
         vertexinfo = self._create_vertexinfo_for_plyobject()
         faceinfo = self._create_faceinfo_for_plyobject()
         partialsurfaceinfo = self._create_surfaceinfo_for_plyobject()
+        print( partialsurfaceinfo )
         allinfo = [ d for d in (vertexinfo, faceinfo, partialsurfaceinfo) \
                     if d is not None ]
         myobj = PlyObject.from_arrays( allinfo )
