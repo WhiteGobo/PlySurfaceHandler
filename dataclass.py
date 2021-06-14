@@ -26,7 +26,8 @@ class vertex():
 class surface():
     def __init__( self, rightup=None, leftup=None, leftdown=None, \
                                     rightdown=None, surfacename=None, \
-                                    vertexlist=None, faceindices = None ):
+                                    vertexlist=None, \
+                                    faceindices:Iterator[Iterator[int]] =None):
         self.rightup = rightup
         self.leftup = leftup
         self.leftdown = leftdown
