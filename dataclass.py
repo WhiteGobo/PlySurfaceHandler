@@ -28,10 +28,14 @@ class surface():
                                     rightdown=None, surfacename=None, \
                                     vertexlist:Iterator[int]=None, \
                                     faceindices:Iterator[Iterator[int]] =None):
-        self.rightup = rightup
-        self.leftup = leftup
-        self.leftdown = leftdown
-        self.rightdown = rightdown
+        clist = (rightup, leftup, leftdown, rightdown)
+        if not any( (all(c is None for c in clist), \
+                    all(c is not None for c in clist)) ):
+            raise TypeError( "rightup, leftup, leftdown or rightdown is wrong" )
+        self.rightup = int(rightup)
+        self.leftup = int(leftup)
+        self.leftdown = int(leftdown)
+        self.rightdown = int(rightdown)
         self.surfacename = surfacename
         self.vertexlist = vertexlist
         if self.vertexlist is not None:
@@ -126,7 +130,6 @@ class plysurfacehandler():
         vertexinfo = self._create_vertexinfo_for_plyobject()
         faceinfo = self._create_faceinfo_for_plyobject()
         partialsurfaceinfo = self._create_surfaceinfo_for_plyobject()
-        input( partialsurfaceinfo )
         allinfo = [ d for d in (vertexinfo, faceinfo, partialsurfaceinfo) \
                     if d is not None ]
         myobj = PlyObject.from_arrays( allinfo )
