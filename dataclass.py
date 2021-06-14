@@ -39,7 +39,7 @@ class surface():
                 vertex_trans, used_faces = self._create_translator( vertexlist,\
                                                                 faceindices )
             except TypeError as err:
-                raise TypeError( "vertexlist or faceindices has wrong type" )
+                raise TypeError( "vertexlist or faceindices has wrong type" ) from err
             if faceindices is None:
                 used_faces = None
         else:
