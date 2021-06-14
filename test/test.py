@@ -59,7 +59,8 @@ class test_asdf( unittest.TestCase ):
         vertices = ((-1, -1, 0), (1, -1, 0), (-1, 1, 0), (1, 1, 0))
         faces = ( (0,1,2), (1,2,3) )
         surface = main.surface( rightup=3, leftup=2, leftdown=0, \
-                                    rightdown=1, surfacename="asdf", \
+                                    rightdown=1, \
+                                    surfacename="asdf", \
                                     vertexlist=(0,1,2,3), faceindices=faces)
         vertices = [ main.vertex( *v ) for v in vertices ]
         faces = [ main.face( f ) for f in faces ]
