@@ -26,7 +26,7 @@ class vertex():
 class surface():
     def __init__( self, rightup=None, leftup=None, leftdown=None, \
                                     rightdown=None, surfacename=None, \
-                                    vertexlist=None, \
+                                    vertexlist:Iterator[int]=None, \
                                     faceindices:Iterator[Iterator[int]] =None):
         self.rightup = rightup
         self.leftup = leftup
@@ -35,8 +35,11 @@ class surface():
         self.surfacename = surfacename
         self.vertexlist = vertexlist
         if self.vertexlist is not None:
-            vertex_trans, used_faces = self._create_translator( vertexlist, \
+            try:
+                vertex_trans, used_faces = self._create_translator( vertexlist,\
                                                                 faceindices )
+            except TypeError as err:
+                raise TypeError( "vertexlist or faceindices has wrong type" )
             if faceindices is None:
                 used_faces = None
         else:
