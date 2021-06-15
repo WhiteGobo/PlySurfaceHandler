@@ -2,7 +2,10 @@ from .exceptions import DatacontainerLoadError
 from .constants import FORMAT_X, FORMAT_Y, FORMAT_Z
 from .plyhandler import ObjectSpec as PlyObject
 import copy
-from typing import Iterator, Generator
+
+# For Documentation
+from typing import Iterator, Generator, Tuple
+Position = Tuple[ float, ... ]
 
 class face():
     def __init__( self, vertex_indices=None ):
@@ -23,11 +26,13 @@ class vertex():
                 or (self.z is None and other_vertex.z is None),
                 )
         return all( conditions )
+
 class surface():
     def __init__( self, rightup=None, leftup=None, leftdown=None, \
-                                    rightdown=None, surfacename=None, \
-                                    vertexlist:Iterator[int]=None, \
-                                    faceindices:Iterator[Iterator[int]] =None):
+                                rightdown=None, surfacename=None, \
+                                vertexlist:Iterator[int]=None, \
+                                faceindices:Iterator[Iterator[int]] =None,\
+                                mapping:Tuple[Tuple[Position,...],...]=None):
         clist = (rightup, leftup, leftdown, rightdown)
         if not any( (all(c is None for c in clist), \
                     all(c is not None for c in clist)) ):
@@ -38,6 +43,7 @@ class surface():
         self.rightdown = int(rightdown)
         self.surfacename = surfacename
         self.vertexlist = vertexlist
+        self.mapping = mapping
         if self.vertexlist is not None:
             try:
                 vertex_trans, used_faces = self._create_translator( vertexlist,\
