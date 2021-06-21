@@ -1,6 +1,7 @@
 from .exceptions import DatacontainerLoadError
 from .constants import FORMAT_X, FORMAT_Y, FORMAT_Z
 from .plyhandler import ObjectSpec as PlyObject
+#from . import utils
 import copy
 
 # For Documentation
@@ -33,6 +34,9 @@ class surface():
                                 vertexlist:Iterator[int]=None, \
                                 faceindices:Iterator[Iterator[int]] =None,\
                                 mapping:Tuple[Tuple[Position,...],...]=None):
+        """
+        :todo: remove raise Exception
+        """
         clist = (rightup, leftup, leftdown, rightdown)
         if not any( (all(c is None for c in clist), \
                     all(c is not None for c in clist)) ):
@@ -48,14 +52,26 @@ class surface():
             try:
                 vertex_trans, used_faces = self._create_translator( vertexlist,\
                                                                 faceindices )
+                used_faces = [ faceindices[ i ] for i in used_faces ]
             except TypeError as err:
-                raise TypeError( "vertexlist or faceindices has wrong type" ) from err
+                raise TypeError( "vertexlist or faceindices has wrong type" ) \
+                                                                    from err
             if faceindices is None:
                 used_faces = None
         else:
+            raise Exception()
             vertex_trans, used_faces = None, None
         self.vertex_trans = vertex_trans
         self.used_faces = used_faces
+
+    def get_borders( self ):
+        from . import utils
+        params =(self.rightup, self.leftup, self.leftdown, self.rightdown, \
+                    self.used_faces )
+        if any( p is None for p in params):
+            raise TypeError( "No faces for getting borders" )
+        borderindices = utils.get_border_from_faces( *params )
+        return borderindices
 
     def _create_translator( self, vertexmask, faceindices ):
         vertex_trans = { a:i for i, a in enumerate( sorted(vertexmask) ) }
@@ -221,6 +237,10 @@ class plysurfacehandler():
             tmp = face( **{ key:arg[i] for key, arg in facedata.items() } )
             faces.append( tmp )
         if number_surfaces > 0:
+            if number_vertices > 0:
+                if "vertexlist" not in surfacedata:
+                    surfacedata["vertexlist"] = [range(number_vertices)] \
+                                                * number_surfaces
             faceindices = tuple(( face.vertex_indices for face in faces ))
         for i in range( number_surfaces ):
             tmp = surface( **{ key: arg[i] \
