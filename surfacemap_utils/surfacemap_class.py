@@ -19,10 +19,6 @@ class surfacemap():
                                                     datamatrix, \
                                                     bounds_error=bounds_error )
         self._interp = myinterpolator
-        #raise Exception( "".join(f"{p}: {self._interp(p)}\n" \
-        #        for p in ((0.51,0.51),(0.49,0.51),(0.49,0.49),(0.51,0.49))),\
-        #        datamatrix[13:16,13:16]
-        #        )
         grad_datamatrix = np.gradient( datamatrix, axis=(0,1) )
         grad_datamatrix[0] = grad_datamatrix[0] * ( len(s_array)-1)
         grad_datamatrix[1] = grad_datamatrix[1] * ( len(t_array)-1)
@@ -32,37 +28,10 @@ class surfacemap():
         dt_interp = RegularGridInterpolator( (s_array, t_array), \
                                             grad_datamatrix[1], \
                                             bounds_error=bounds_error )
-        perpendicular = np.cross( grad_datamatrix[0], grad_datamatrix[1] )
-        perp_length = np.linalg.norm( perpendicular, axis=2)
-        perpendicular_norm = perpendicular \
-                            / perp_length.reshape((*perp_length.shape,1))
-        self._perpendicular_interp =RegularGridInterpolator((s_array, t_array),\
-                                            perpendicular, \
-                                            bounds_error=bounds_error )
         self._interp_ds, self._interp_dt = ds_interp, dt_interp
-        #grad_datamatrix = np.gradient( datamatrix, axis=(0,1) )
-        dxyz_to_dst = np.zeros( (datamatrix.shape[0], datamatrix.shape[1],\
-                                datamatrix.shape[2],2) )
-        dxyz_to_dst[:,:,:,0] = grad_datamatrix[0]
-        dxyz_to_dst[:,:,:,1] = grad_datamatrix[1]
-        #dxyz_to_dst[:,:,:,2] = perpendicular
-        dxyz_to_dst2 = np.linalg.pinv( dxyz_to_dst )
-        #raise Exception(  dxyz_to_dst2[10,10] @ grad_datamatrix[1][10,10], s_array[10] )
-        self._invgrad_interp =RegularGridInterpolator((s_array, t_array),\
-                                            dxyz_to_dst2, \
-                                            bounds_error=bounds_error )
-        #raise Exception( self.get_inverse_gradmatrix(*p) @ self.get_derivate_to_st(*p)[0] )
-        #raise Exception( self.get_derivate_to_st( 0.27792966, 0.36340138 ) )
-
-    def get_inverse_gradmatrix( self, x:float, y:float ) \
-                                            ->Tuple[Tuple[float,...]]:
-        return self._invgrad_interp((x,y))
 
     def get_value_to_st( self, x:float, y:float ) -> Tuple[float,...]:
         return self._interp(( x, y ))
-
-    def get_perpendicular_to_st( self, x:float, y:float ) -> Tuple[float,...]:
-        return self._perpendicular_interp(( x, y ))
 
     def get_derivate_to_st( self, x:float, y:float ) \
                             -> Tuple[Tuple[float,...],Tuple[float,...]]:
@@ -71,6 +40,10 @@ class surfacemap():
                 two direction dx,dy at position x, y
         """
         return self._interp_ds( (x, y) ), self._interp_dt( (x, y) )
+
+    def get_transmatrix_dxyz_to_dst( self, x:float, y:float ):
+        tmp = self.get_derivate_to_st( x, y )
+        return np.linalg.pinv( tmp )
 
 
     @classmethod

@@ -3,6 +3,7 @@ from scipy.sparse.linalg import spsolve
 from scipy.spatial import Delaunay
 from scipy.interpolate import CloughTocher2DInterpolator, LinearNDInterpolator
 from scipy.sparse.linalg import spsolve
+from scipy.signal import convolve
 import itertools
 import numpy as np
 from scipy.optimize import minimize, Bounds
@@ -21,6 +22,8 @@ def create_gridmap_from( up, left, down, right, \
     number_vertices = len( vertexpositions )
     edges = set( frozenset(e) for e in edges )
     edges = list( tuple(e) for e in edges )
+    roughgridshape = (40, 40)
+    ulength, vlength = 15, 15
     # rough estimation of uv-pos of vertices
 
     u_array, v_array = _estimate_uv_from_edgegrid( number_vertices, \
@@ -39,33 +42,31 @@ def create_gridmap_from( up, left, down, right, \
 
     # generate uv to position generator from verticeposition
     uv_to_xyz = generate_surfaceinterpolator( vertexpositions, u_array, v_array)
-    l, l2 = 21, 23
     #todo: instead of linspace use all used u and v positions as crossproduct
-    s_array, t_array = np.linspace(0,1,l), np.linspace(0,1,l2)
-    datamatrix = np.zeros((l,l2,3))
+    s_array = np.linspace(0,1,roughgridshape[0])
+    t_array = np.linspace(0,1,roughgridshape[1])
+    datamatrix = np.zeros((*roughgridshape,3))
     for i, s in enumerate( s_array ):
         for j, t in enumerate( t_array ):
             datamatrix[i,j,:] = uv_to_xyz( s, t )
     firstsurfmap = surfacemap( s_array, t_array, datamatrix )
-    firstsurfmap.visualize_with_matplotlib()
 
     # generate grid and minimize deviation of real distances of gridvertices
-    ulength, vlength = 20,20
     grid_u, grid_v = np.meshgrid( np.linspace(0,1,vlength), \
                                     np.linspace(0,1,ulength) )
     grid_xyz = _optimise_grid_position( grid_u, grid_v, \
                                 firstsurfmap.get_value_to_st, \
                                 firstsurfmap.get_derivate_to_st, \
-                                firstsurfmap.get_perpendicular_to_st, \
-                                firstsurfmap.get_inverse_gradmatrix )
+                                firstsurfmap.get_transmatrix_dxyz_to_dst, \
+                                )
 
     secondsurfmap = surfacemap( np.linspace(0,1,ulength), \
                                 np.linspace(0,1,vlength), grid_xyz )
-    secondsurfmap.visualize_with_matplotlib()
+    return secondsurfmap
 
 
 def _optimise_grid_position( grid_u, grid_v, uv_to_xyz, uv_to_dxyz, \
-                            uv_to_perpendicular, uv_to_matrix_xyztouv ):
+                                            transmatrix_dxyz_to_duv ):
     u_length, v_length = grid_u.shape
     innerindex_grid = itertools.product(range(1,u_length-1),range(1,v_length-1))
     v_offset = (u_length-2) * (v_length-2)
@@ -101,38 +102,24 @@ def _optimise_grid_position( grid_u, grid_v, uv_to_xyz, uv_to_dxyz, \
             ui, vi = param_indices
             current_pos[ p[0], p[1],: ] = uv_to_xyz( params[ui], params[vi] )
         return current_pos
-    def params_to_grid_dst_dxyz( params ):
-        current_dxyz = np.zeros( (2, u_length-2, v_length-2, 3) )
-        for p, param_indices in grid_indices_to_param_uv_indices.items():
-            ui, vi = param_indices
-            current_dxyz[ :,p[0]-1, p[1]-1,:] \
-                    = np.array(uv_to_dxyz( params[ui], params[vi] )).reshape((2,3))
-        return current_dxyz
     def params_to_matrix_xyz_to_st( params ):
         current_dxyz = np.zeros( (u_length-2, v_length-2, 2, 3) )
         for p, param_indices in grid_indices_to_param_uv_indices.items():
             ui, vi = param_indices
-            tmp = np.array(uv_to_dxyz( params[ui], params[vi] )).T
-            current_dxyz[ p[0]-1, p[1]-1,:,:]  = np.linalg.pinv( tmp )
-        return current_dxyz
-        current_dxyz = np.zeros( (u_length-2, v_length-2, 2,3) )
-        for p, param_indices in grid_indices_to_param_uv_indices.items():
-            ui, vi = param_indices
-            current_dxyz[ p[0]-2, p[1]-2,:,:] \
-                    = np.array(uv_to_matrix_xyztouv( params[ui], params[vi] ))
+            current_dxyz[ p[0]-1, p[1]-1,:,:]  \
+                    = transmatrix_dxyz_to_duv( params[ui], params[vi] ).T
         return current_dxyz
 
-
+    forceshape = np.subtract( (*grid_u.shape, 3), (2,2,0) )
+    shape_force_for_transformation = ( forceshape[0], forceshape[1], 3, 1 )
+    forcewindow = np.array(((0,1,0),(1,-4,1),(0,1,0)))
     def get_jacobian( params ):
         xyz = params_to_grid_xyz( params )
-        forceshape = np.subtract( xyz.shape, (2,2,0) )
         force = np.zeros( forceshape )
-        forcewindow = np.array(((0,1,0),(1,-4,1),(0,1,0)))
         for i in range(3):
-            force[:,:,i] = convolve( xyz[:,:,i],forcewindow,mode="valid")
-
+            force[:,:,i] = convolve( xyz[:,:,i], forcewindow, mode="valid" )
         invmatrix = params_to_matrix_xyz_to_st( params )
-        tmp = invmatrix@(-force.reshape((force.shape[0], force.shape[1], 3, 1)))
+        tmp = invmatrix@(-force.reshape( shape_force_for_transformation ))
         tmp_s = tmp[:,:,0,0]
         tmp_t = tmp[:,:,1,0]
         jacobian = np.zeros( (len(params),) )
@@ -141,50 +128,7 @@ def _optimise_grid_position( grid_u, grid_v, uv_to_xyz, uv_to_dxyz, \
             jacobian[ ui ] = tmp_s[ p[0]-1, p[1]-1 ]
             jacobian[ vi ] = tmp_t[ p[0]-1, p[1]-1 ]
         return jacobian
-        raise Exception( force.shape, invmatrix.shape , \
-                        (invmatrix@force.reshape((force.shape[0],force.shape[1],3,1))),\
-                        tmp_s.shape, tmp_t.shape)
 
-        q = np.linalg.norm(force, axis=2)
-        forcedirection = force# / q.reshape( (*q.shape, 1) )
-        dxyz = params_to_grid_dst_dxyz( params )
-        tmp_s = -4 * dxyz[0] * forcedirection
-        tmp_t = -4 * dxyz[1] * forcedirection
-        tmp_s[ :  , 1:  ] += dxyz[0,  :  ,  :-1] * forcedirection[:,1:]
-        tmp_s[ :  ,  :-1] += dxyz[0,  :  , 1:  ] * forcedirection[:,:-1]
-        tmp_s[1:  ,  :  ] += dxyz[0,  :-1,  :  ] * forcedirection[1:,:]
-        tmp_s[ :-1,  :  ] += dxyz[0, 1:  ,  :  ] * forcedirection[:-1,:]
-        tmp_t[ :  , 1:  ] += dxyz[1,  :  ,  :-1] * forcedirection[:,1:]
-        tmp_t[ :  ,  :-1] += dxyz[1,  :  , 1:  ] * forcedirection[:,:-1]
-        tmp_t[1:  ,  :  ] += dxyz[1,  :-1,  :  ] * forcedirection[1:,:]
-        tmp_t[ :-1,  :  ] += dxyz[1, 1:  ,  :  ] * forcedirection[:-1,:]
-
-        tmp_s = np.sum( tmp_s, axis=2)
-        tmp_t = np.sum( tmp_t, axis=2)
-        #print( "hello" )
-        #print( tmp_s )
-        #print( tmp_t )
-        #print( (force.reshape((8,8,1,3)) @ invmatrix) )
-        m = force.reshape((force.shape[0], force.shape[1],1,3)) @ invmatrix
-        tmp_s = -m[:,:,0,0]
-        tmp_t = -m[:,:,0,2]
-        #tmp_s = sum( tmp_s[:,:,i] for i in range(3) )
-        #tmp_t = sum( tmp_t[:,:,i] for i in range(3) )
-        jacobian = np.zeros( (len(params),) )
-        print( "xyz\n", xyz )
-        print( "f", force )
-        print( "inv", invmatrix )
-        print( "m", m )
-        raise Exception( xyz, force, invmatrix, m)
-        raise Exception( xyz, params, tmp_s, tmp_t )
-        for p, param_indices in grid_indices_to_param_uv_indices.items():
-            ui, vi = param_indices
-            jacobian[ ui ] = tmp_s[ p[0]-1, p[1]-1 ]
-            jacobian[ vi ] = tmp_t[ p[0]-1, p[1]-1 ]
-        return jacobian
-
-
-    from scipy.signal import convolve
     def foo_to_minimize( params ):
         xyz = params_to_grid_xyz( params )
         forceshape = np.subtract( xyz.shape, (2,2,0) )
@@ -200,102 +144,15 @@ def _optimise_grid_position( grid_u, grid_v, uv_to_xyz, uv_to_dxyz, \
         nonperp_force = force - perpendicular * perp_force_scalar
         q = np.sum( np.linalg.norm(nonperp_force, axis=2))
         return q
-
-        q = np.sum( np.linalg.norm(force, axis=2) )
-        return q
-        return np.sum( np.linalg.norm(force, axis=2))
     mybounds = [(0,1)]*len(startparams)
     foundparams = minimize( foo_to_minimize, startparams , \
                                         #method='BFGS',\
                                         jac = get_jacobian, \
                                         bounds=mybounds, \
-                                        options={'gtol':1e-8, 'disp':True,\
-                                        #'maxfev':200*len(startparams),\
-                                        #'maxiter':200*len(startparams), \
+                                        options={'gtol':1e-8, 'disp':False,\
                                         })
-    #foundparams = minimize( foo_to_minimize, \
-    #                                    startparams , method='POWELL',\
-    #                                    jac = get_jacobian, \
-    #                                    #bounds = mybounds, \
-    #                                    #options={'xatol':1e-8, 'disp':True,\
-    #                                    options={'gtol':1e-8, 'disp':True,\
-    #                                    'maxfev':200*len(startparams),\
-    #                                    'maxiter':200*len(startparams), })
-    print( foundparams )
     grid_xyz = params_to_grid_xyz( foundparams.x )
-    #grid_xyz = params_to_grid_xyz( startparams )
     return grid_xyz
-
-
-def _edgethingis_for_grid( u_length, v_length, grid_indices_to_param_indices ):
-    number_params = len( grid_indices_to_param_indices )
-    u_edges = np.array([ [( (u1,v), (u2,v) ) \
-                for u1, u2 in zip( range(u_length-1), range(1,u_length) )] \
-                for v in range(1, v_length-1) ])
-    v_edges = np.array([ [( (u,v1), (u,v2) ) \
-                for v1, v2 in zip( range(v_length-1), range(1,v_length) )] \
-                for u in range(1, u_length-1) ])
-
-    def vertpos_to_sum_squarelength_in_each_row( grid_xyz ) -> float:
-        sum_lengthsquare = 0.0
-        for row in itertools.chain( u_edges, v_edges ):
-             sum_lengthsquare \
-                     += np.sum( np.square( [ \
-                        np.linalg.norm( grid_xyz[ v1[0], v1[1],: ] \
-                                - grid_xyz[ v2[0], v2[1],: ] ) \
-                        for v1, v2 in row ] ))
-        return sum_lengthsquare
-
-    def vertpos_to_sum_squarelengthderivation_in_each_row( grid_xyz ) -> float:
-        length_array_of_u_edges = np.zeros( u_edges.shape )
-        length_array_of_v_edges = np.zeros( v_edges.shape )
-        sum_lengthdifference_in_path = 0.0
-        for row in itertools.chain( u_edges, v_edges ):
-             sum_lengthdifference_in_path \
-                     += np.sum( np.square( np.gradient( [ \
-                        np.linalg.norm( grid_xyz[ v1[0], v1[1],: ] \
-                                - grid_xyz[ v2[0], v2[1],: ] ) \
-                        for v1, v2 in row ] )))
-        return sum_lengthdifference_in_path
-    return vertpos_to_sum_squarelengthderivation_in_each_row,\
-            vertpos_to_sum_squarelength_in_each_row
-
-    mat_vert_to_uedges = lil_matrix( (numbervertices, paramlength) )
-    for v1, v2 in u_edges:
-        mat_vert_to_uedges[ gridtrans_1d[ v1 ], gridtrans_params[ v2 ]] = 1
-        mat_vert_to_uedges[ gridtrans_1d[ v2 ], gridtrans_params[ v2 ]] += -1
-        mat_vert_to_uedges[ gridtrans_1d[ v2 ], gridtrans_params[ v1 ]] = 1
-        mat_vert_to_uedges[ gridtrans_1d[ v1 ], gridtrans_params[ v1 ]] += -1
-    mat_vert_to_uedges = mat_vert_to_uedges.tocsr()
-    mat_vert_to_vedges = lil_matrix( (numbervertices, paramlength) )
-    for v1, v2 in v_edges:
-        mat_vert_to_vedges[ gridtrans_1d[ v1 ], gridtrans_params[ v2 ]] = 1
-        mat_vert_to_vedges[ gridtrans_1d[ v2 ], gridtrans_params[ v2 ]] += -1
-        mat_vert_to_vedges[ gridtrans_1d[ v2 ], gridtrans_params[ v1 ]] = 1
-        mat_vert_to_vedges[ gridtrans_1d[ v1 ], gridtrans_params[ v1 ]] += -1
-    mat_vert_to_vedges = mat_vert_to_vedges.tocsr()
-    def get_paramtominimize( x_pos_1d, y_pos_1d, z_pos_1d ):
-        delta_x_uedges = x_pos_1d * mat_vert_to_uedges
-        delta_y_uedges = y_pos_1d * mat_vert_to_uedges
-        delta_z_uedges = z_pos_1d * mat_vert_to_uedges
-        delta_x_vedges = x_pos_1d * mat_vert_to_vedges
-        delta_y_vedges = y_pos_1d * mat_vert_to_vedges
-        delta_z_vedges = z_pos_1d * mat_vert_to_vedges
-        du_arrays = (delta_x_uedges, delta_x_uedges, delta_x_uedges )
-        delta_uedges = np.sqrt( np.sum( np.square(arr) for arr in du_arrays ))
-        dv_arrays = (delta_x_vedges, delta_x_vedges, delta_x_vedges )
-        delta_vedges = np.sqrt( np.sum( np.square(arr) for arr in dv_arrays ))
-        return np.sum( delta_uedges ) + np.sum( delta_vedges )
-    return get_paramtominimize
-
-
-    #mat = dok_matrix( (vertexnumbers, vertexnumbers-len(borderindices)) )
-    #filtered_vertexnumbers = vi for vi in range(vertexnumbers) \
-    #                            if vi not in borderindices
-    #for i, vertex_index in enumerate( filtered_vertexnumbers ):
-    #    mat[ vertex_index, i ] = 1
-    #add_matrix = mat.transpose().tocsr()
-
 
 
 def _create_function_params_grid_translator( grid_u, grid_v ):
@@ -337,16 +194,6 @@ def generate_surfaceinterpolator( vertexpositions, u_array, v_array ):
     #xyz_as_uvmap = CloughTocher2DInterpolator( delaunay_triang,vertexpositions)
     uv_to_xyz = LinearNDInterpolator( delaunay_triang, vertexpositions)
     return uv_to_xyz
-
-
-def _estimate_uv_positions( up, left, down, right, vertexpositions, edges ):
-    number_vertices = len( vertexpositions )
-    interaction_matrix = lil_matrix((number_vertices, number_vertices))
-    startpositions_u, startpositions_v = _create_initcondition_for_ub_finding()
-    def array_to_uvpos( uv_array ):
-        return uv_array.reshape((number_vertices,2))
-    def uvpos_to_array( uv_positions ):
-        return uv_positions.reshape((2 * number_vertices,))
 
 
 def _create_optimiser( vertexpositions, edges, borderindices, start_u, start_v):
@@ -503,18 +350,3 @@ def _create_initcondition_for_uv_finding( number_vertices, vertexpositions, \
         startpositions_v[index] = d
     return startpositions_u.tocsr(), startpositions_v.tocsr()
 
-
-def helpinghand( datamatrix ):
-    import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D
-    from matplotlib import cm
-
-    fig = plt.figure()
-    ax = fig.gca( projection='3d' )
-    surf = ax.plot_wireframe( *(self.datamatrix[:,:,i] for i in (0,1,2) ) )
-
-    #x_test = np.linspace(0,1)
-    #y_test = np.linspace(0,3)
-    #z_test = myinter( (x_test, y_test) )
-    #ax.plot( x_test, y_test, z_test )
-    plt.show()

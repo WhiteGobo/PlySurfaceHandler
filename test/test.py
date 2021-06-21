@@ -94,9 +94,10 @@ class test_asdf( unittest.TestCase ):
         surf = asdf.get_surface( 0 )
         up, left, down, right = surf.get_borders()
         vertexpositions = list( vertexpositions )
-        grid_x, grid_y, grid_z = surfut.create_gridmap_from( \
+        surfmap = surfut.create_gridmap_from( \
                                                     up, left, down, right, \
                                                     vertexpositions, edges )
+        surfmap.visualize_with_matplotlib()
 
 
 
