@@ -1,4 +1,5 @@
 import unittest
+import itertools
 import sys
 import importlib
 import os.path
@@ -39,8 +40,8 @@ class test_asdf( unittest.TestCase ):
             self.assertEqual( a, b )
         self.assertEqual( "surf1", surf1.surfacename )
         self.assertEqual( "surf2", surf2.surfacename )
-        self.assertEqual( None, surf1.vertexlist )
-        self.assertEqual( None, surf2.vertexlist )
+        self.assertEqual( tuple(range(25)), tuple(surf1.vertexlist) )
+        self.assertEqual( tuple(range(25)), tuple(surf2.vertexlist) )
 
     def test_save_ply_easyfacesvertices( self ):
         vertices = ((-1, -1, 0), (1, -1, 0), (-1, 1, 0), (1, 1, 0))
@@ -79,6 +80,23 @@ class test_asdf( unittest.TestCase ):
                                 qwer.get_surface(0).surfacename )
             self.assertEqual( tuple(asdf.get_surface(0).vertexlist), \
                                 tuple(qwer.get_surface(0).vertexlist) )
+
+    def test_create_gridmap( self ):
+        surfut = importlib.import_module( "plysurfacehandler.surfacemap_utils" )
+        tmpfile = os.path.join( testpath, "singlesurface.ply" )
+        asdf = main.plysurfacehandler.load_from_file( tmpfile )
+        vertexpositions = asdf.get_vertexpositions()
+        faces = asdf.get_faceindices()
+        edges = ( itertools.chain( *(zip( f[:], f[1:]+f[:1] ) for f in faces )))
+        edges = set( frozenset( e ) for e in edges )
+        edges = list( tuple(e) for e in edges )
+
+        surf = asdf.get_surface( 0 )
+        up, left, down, right = surf.get_borders()
+        vertexpositions = list( vertexpositions )
+        grid_x, grid_y, grid_z = surfut.create_gridmap_from( \
+                                                    up, left, down, right, \
+                                                    vertexpositions, edges )
 
 
 
