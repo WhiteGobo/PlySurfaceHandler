@@ -1,8 +1,11 @@
-from .exceptions import DatacontainerLoadError
+from .exceptions import DatacontainerLoadError, NoSurfaceForMap
 from .constants import FORMAT_X, FORMAT_Y, FORMAT_Z
 from .plyhandler import ObjectSpec as PlyObject
 #from . import utils
 import copy
+import itertools
+from . import surfacemap_utils
+import numpy as np
 
 # For Documentation
 from typing import Iterator, Generator, Tuple
@@ -64,6 +67,16 @@ class surface():
         self.vertex_trans = vertex_trans
         self.used_faces = used_faces
 
+    def add_surfacemap( self, surfacemap:surfacemap_utils.surfacemap ):
+         datamatrix = surfacemap.get_point_matrix()
+         self.mapping = datamatrix
+    
+    def get_surfacemap( self ):
+        return surfacemap_utils.surfacemap.from_datamatrix( self.mapping )
+
+    def get_datamatrix_of_surfacematrix( self ):
+        return self.mapping
+
     def get_borders( self ):
         from . import utils
         params =(self.rightup, self.leftup, self.leftdown, self.rightdown, \
@@ -92,6 +105,34 @@ class plysurfacehandler():
             assert type( facelist[0] ) == face, "plysurfhandler worng input"
         if surfacelist is not None:
             assert type( surfacelist[0] ) ==surface,"plysurfhandler worng input"
+
+    def complete_surfaces_with_map( self ):
+        for index in range( self.get_number_surfaces() ):
+            surf = self.get_surface( index )
+            surfmap = self.create_surfacemap( index )
+            surf.add_surfacemap( surfmap )
+
+    def create_surfacemap( self, index ):
+        """
+        :raises: {NoSurfaceForMap}, {IndexError}
+        """
+        if self._surfacelist is None:
+            raise NoSurfaceForMap( "No Surface in this data for map" )
+        if index >= self.get_number_surfaces():
+            raise IndexError( "surface index out of range" )
+        vertexpositions = self.get_vertexpositions()
+        faces = self.get_faceindices()
+        edges = ( itertools.chain( *(zip( f[:], f[1:]+f[:1] ) for f in faces )))
+        edges = set( frozenset( e ) for e in edges )
+        edges = list( tuple(e) for e in edges )
+
+        surf = self.get_surface( index )
+        up, left, down, right = surf.get_borders()
+        vertexpositions = list( vertexpositions )
+        surfmap = surfacemap_utils.create_gridmap_from( \
+                                                    up, left, down, right, \
+                                                    vertexpositions, edges )
+        return surfmap
 
     def get_vertexpositions( self ) -> Iterator[ Iterator[float] ]:
         """
@@ -211,15 +252,24 @@ class plysurfacehandler():
                 borderpipeline.append(( "list", "uint", "uint", "vertexlist" ))
             sn = [ self.get_surface(i).vertexlist for i in range( number ) ]
             borderdata.append( sn )
+        if surf.mapping is not None:
+            borderpipeline.extend([ ("uint", "ulength"), ("uint", "vlength"),\
+                                    ("uchar", "numbercoordinates")])
+            ulength_array, vlength_array, numbercoords = [], [], []
+            borderdata.extend( (ulength_array, vlength_array, numbercoords) )
+            #borderpipeline.append(( "list", "float", "uint", "datamatrix" ))
+            borderpipeline.append(( "list", "uint", "uint", "datamatrix" ))
+            datamatrix_array = []
+            borderdata.append( datamatrix_array )
+            for i in range( number ):
+                surf = self.get_surface( i )
+                datamatrix = np.array( surf.get_datamatrix_of_surfacematrix() )
+                ulength_array.append( datamatrix.shape[0] )
+                vlength_array.append( datamatrix.shape[1] )
+                numbercoords.append( datamatrix.shape[2] )
+                datamatrix_array.append( tuple( datamatrix.flat ) )
         return ("cornerrectangle", tuple(borderpipeline), tuple(borderdata) )
 
-        #for surf in self._surfacelist:
-        #    borderindices = list( 
-        #        np.array( cornerdata ).T.reshape((4, len(surfacenames))) )
-        if surfacenames != (None,):
-            borderpipeline.append( ("list", "uchar", "uchar", "surfacename" ) )
-            sn = [ bytes(name, encoding="utf8") for name in surfacenames ]
-            borderindices.append( sn )
 
     @classmethod
     def load_from_file( cls, filepath:str ):
@@ -271,7 +321,10 @@ def _get_surfacedata( plyobj ):
     if number_surfaces == 0:
         return None, number_surfaces
     for dataname in ( "rightup", "leftup", "leftdown", "rightdown", \
-                        "surfacename", "vertexlist" ):
+                        "surfacename", "vertexlist", "datamatrix", \
+                        "ulength", "vlength", "numbercoordinates", \
+                        ):
+
         try:
             borderdata[ dataname ] = plyobj.get_dataarray( "cornerrectangle", \
                                                                     dataname )
@@ -282,4 +335,15 @@ def _get_surfacedata( plyobj ):
     if "surfacename" in borderdata:
         borderdata[ "surfacename" ] = [ "".join(chr(i) for i in name) \
                                     for name in borderdata[ "surfacename" ]]
+    if "datamatrix" in borderdata:
+        newmatrices = []
+        datakeys = ("datamatrix", "ulength", "vlength", "numbercoordinates")
+        surfacemap_data = (borderdata[key] for key in datakeys )
+        for data, ul, vl, positiondimension in zip( *surfacemap_data ): 
+            newmatrices.append( \
+                    np.array( data ).reshape( (ul,vl,positiondimension) )
+                    )
+        for key in datakeys:
+            borderdata.pop( key )
+        borderdata["mapping"] = newmatrices
     return borderdata, number_surfaces

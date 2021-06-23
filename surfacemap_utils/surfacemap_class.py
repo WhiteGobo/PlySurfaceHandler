@@ -8,7 +8,7 @@ from typing import Tuple, Iterable
 class surfacemap():
     def __init__( self, s_array:Iterable[float], \
                         t_array:Iterable[float], \
-                        datamatrix: Tuple[Tuple[Tuple[float,...],...],...],\
+                        datamatrix: Tuple[Tuple[Tuple[float,...],...],...], \
                         bounds_error = False):
         """
         :todo: replace in grad_matr /len(starr) with something like /grad(sarr)
@@ -30,6 +30,16 @@ class surfacemap():
                                             bounds_error=bounds_error )
         self._interp_ds, self._interp_dt = ds_interp, dt_interp
 
+    def get_point_matrix( self ):
+        if are_equidistant( self.s_array, self.t_array ):
+            return self.datamatrix
+        else:
+            xyzst_matrix = np.zeros( (len(self.s_array),len(self.t_array), \
+                                        2+self.datamatrix.shape[-1] ) )
+            xyzst_matrix[ :, :, :-2 ] = self.datamatrix
+            xyzst_matrix[ :, :, -2: ] = np.meshgrid( s_array, t_array )
+            return xyzst_matrix
+
     def get_value_to_st( self, x:float, y:float ) -> Tuple[float,...]:
         return self._interp(( x, y ))
 
@@ -45,6 +55,14 @@ class surfacemap():
         tmp = self.get_derivate_to_st( x, y )
         return np.linalg.pinv( tmp )
 
+    @classmethod
+    def from_datamatrix( cls, \
+                        datamatrix: Tuple[Tuple[Tuple[float,...],...],...], \
+                        ):
+        shape = np.array( datamatrix ).shape
+        s_array = np.linspace( 0, 1, shape[0] )
+        t_array = np.linspace( 0, 1, shape[1] )
+        return cls( s_array, t_array, datamatrix )
 
     @classmethod
     def from_arrays( cls, shape :Tuple[int,int], *arrays: Iterable[float] ):
@@ -86,3 +104,10 @@ class surfacemap():
         #ax.plot( x_test, y_test, z_test )
         plt.show()
 
+def are_equidistant( *arrays ):
+    for arr in arrays:
+        arr = np.array( arr )
+        d = arr[0] - arr[1]
+        if not np.allclose( d, arr[1:-1] - arr[2:] ):
+            return False
+    return True

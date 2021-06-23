@@ -11,6 +11,7 @@ _main_loader = importlib.machinery.SourceFileLoader( modulename, asdf )
 main = _main_loader.load_module()
 
 import tempfile
+import numpy as np
 
 
 class test_asdf( unittest.TestCase ):
@@ -82,22 +83,27 @@ class test_asdf( unittest.TestCase ):
                                 tuple(qwer.get_surface(0).vertexlist) )
 
     def test_create_gridmap( self ):
-        surfut = importlib.import_module( "plysurfacehandler.surfacemap_utils" )
+        #surfut =importlib.import_module( "plysurfacehandler.surfacemap_utils" )
         tmpfile = os.path.join( testpath, "singlesurface.ply" )
         asdf = main.plysurfacehandler.load_from_file( tmpfile )
-        vertexpositions = asdf.get_vertexpositions()
-        faces = asdf.get_faceindices()
-        edges = ( itertools.chain( *(zip( f[:], f[1:]+f[:1] ) for f in faces )))
-        edges = set( frozenset( e ) for e in edges )
-        edges = list( tuple(e) for e in edges )
+        surfmap = asdf.create_surfacemap( 0 )
+        #surfmap.visualize_with_matplotlib()
 
-        surf = asdf.get_surface( 0 )
-        up, left, down, right = surf.get_borders()
-        vertexpositions = list( vertexpositions )
-        surfmap = surfut.create_gridmap_from( \
-                                                    up, left, down, right, \
-                                                    vertexpositions, edges )
-        surfmap.visualize_with_matplotlib()
+    def test_complete_and_save_gridmaps( self ):
+        tmpfile = os.path.join( testpath, "singlesurface.ply" )
+        asdf = main.plysurfacehandler.load_from_file( tmpfile )
+        asdf.complete_surfaces_with_map()
+        matr1 = np.array( asdf.get_surface(0).get_datamatrix_of_surfacematrix())
+        matr2 = np.array( asdf.get_surface(0).get_surfacemap().datamatrix)
+        self.assertTrue( np.allclose( matr1, matr2 ))
+        with tempfile.TemporaryDirectory() as tmpdir:
+            filepath = os.path.join( tmpdir, "tmpfile.ply" )
+            asdf.save_to_file( filepath )
+            qwer = main.plysurfacehandler.load_from_file( filepath )
+            matr3 = qwer.get_surface(0).get_datamatrix_of_surfacematrix()
+            self.assertIsNotNone( matr3 )
+            #self.assertTrue( np.allclose( matr1, np.array(matr3) ))
+
 
 
 
