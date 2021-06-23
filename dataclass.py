@@ -62,7 +62,6 @@ class surface():
             if faceindices is None:
                 used_faces = None
         else:
-            raise Exception()
             vertex_trans, used_faces = None, None
         self.vertex_trans = vertex_trans
         self.used_faces = used_faces
