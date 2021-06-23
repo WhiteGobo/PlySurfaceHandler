@@ -102,7 +102,7 @@ class test_asdf( unittest.TestCase ):
             qwer = main.plysurfacehandler.load_from_file( filepath )
             matr3 = qwer.get_surface(0).get_datamatrix_of_surfacematrix()
             self.assertIsNotNone( matr3 )
-            #self.assertTrue( np.allclose( matr1, np.array(matr3) ))
+            self.assertTrue( np.allclose( matr1, np.array(matr3) ))
 
 
 

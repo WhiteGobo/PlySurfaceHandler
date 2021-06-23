@@ -257,8 +257,7 @@ class plysurfacehandler():
                                     ("uchar", "numbercoordinates")])
             ulength_array, vlength_array, numbercoords = [], [], []
             borderdata.extend( (ulength_array, vlength_array, numbercoords) )
-            #borderpipeline.append(( "list", "float", "uint", "datamatrix" ))
-            borderpipeline.append(( "list", "uint", "uint", "datamatrix" ))
+            borderpipeline.append(( "list", "uint", "float", "datamatrix" ))
             datamatrix_array = []
             borderdata.append( datamatrix_array )
             for i in range( number ):
