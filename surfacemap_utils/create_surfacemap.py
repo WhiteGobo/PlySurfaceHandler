@@ -320,6 +320,9 @@ def _calc_pathdistance_array( vertexpositions, path_indices ):
         p1 = vertexpositions[ a ]
         p2 = vertexpositions[ b ]
         path_distance.append( np.linalg.norm( np.subtract(p1,p2) ) )
+    path_distance = np.array( path_distance )
+    path_distance = [ sum( path_distance[:i+1] ) \
+                        for i in range(path_distance.shape[0])]
     return np.array( path_distance )
 
 

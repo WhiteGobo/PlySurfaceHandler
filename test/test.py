@@ -89,6 +89,13 @@ class test_asdf( unittest.TestCase ):
         surfmap = asdf.create_surfacemap( 0 )
         #surfmap.visualize_with_matplotlib()
 
+    def test_create_gridmap_second( self ):
+        #surfut =importlib.import_module( "plysurfacehandler.surfacemap_utils" )
+        tmpfile = os.path.join( testpath, "singlesurfacesecond.ply" )
+        asdf = main.plysurfacehandler.load_from_file( tmpfile )
+        surfmap = asdf.create_surfacemap( 0 )
+        surfmap.visualize_with_matplotlib()
+
     def test_complete_and_save_gridmaps( self ):
         tmpfile = os.path.join( testpath, "singlesurface.ply" )
         asdf = main.plysurfacehandler.load_from_file( tmpfile )
