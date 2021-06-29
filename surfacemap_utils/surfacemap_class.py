@@ -30,6 +30,35 @@ class surfacemap():
                                             bounds_error=bounds_error )
         self._interp_ds, self._interp_dt = ds_interp, dt_interp
 
+    def _get_uplength( self ):
+        upnodes = np.array( self.datamatrix[:,-1] )
+        lengtharray = np.linalg.norm( upnodes[:-1] - upnodes[1:], axis=-1 )
+        distances = [ np.sum( lengtharray[:i] ) \
+                        for i in range(len(lengtharray)+1)]
+        return distances
+    uplength = property( fget=_get_uplength )
+    def _get_leftlength( self ):
+        upnodes = np.array( self.datamatrix[0,:] )
+        lengtharray = np.linalg.norm( upnodes[:-1] - upnodes[1:], axis=-1 )
+        distances = [ np.sum( lengtharray[:i] ) \
+                        for i in range(len(lengtharray)+1)]
+        return distances
+    leftlength = property( fget=_get_leftlength )
+    def _get_downlength( self ):
+        upnodes = np.array( self.datamatrix[:,0] )
+        lengtharray = np.linalg.norm( upnodes[:-1] - upnodes[1:], axis=-1 )
+        distances = [ np.sum( lengtharray[:i] ) \
+                        for i in range(len(lengtharray)+1)]
+        return distances
+    downlength = property( fget=_get_downlength )
+    def _get_rightlength( self ):
+        upnodes = np.array( self.datamatrix[-1,:] )
+        lengtharray = np.linalg.norm( upnodes[:-1] - upnodes[1:], axis=-1 )
+        distances = [ np.sum( lengtharray[:i] ) \
+                        for i in range(len(lengtharray)+1)]
+        return distances
+    rightlength = property( fget=_get_rightlength )
+
     def get_point_matrix( self ):
         if are_equidistant( self.s_array, self.t_array ):
             return self.datamatrix

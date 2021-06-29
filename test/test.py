@@ -94,7 +94,7 @@ class test_asdf( unittest.TestCase ):
         tmpfile = os.path.join( testpath, "singlesurfacesecond.ply" )
         asdf = main.plysurfacehandler.load_from_file( tmpfile )
         surfmap = asdf.create_surfacemap( 0 )
-        surfmap.visualize_with_matplotlib()
+        #surfmap.visualize_with_matplotlib()
 
     def test_complete_and_save_gridmaps( self ):
         tmpfile = os.path.join( testpath, "singlesurface.ply" )
@@ -110,6 +110,18 @@ class test_asdf( unittest.TestCase ):
             matr3 = qwer.get_surface(0).get_datamatrix_of_surfacematrix()
             self.assertIsNotNone( matr3 )
             self.assertTrue( np.allclose( matr1, np.array(matr3) ))
+
+    def test_get_lengths( self ):
+        tmpfile = os.path.join( testpath, "singlesurface_with_map.ply" )
+        asdf = main.plysurfacehandler.load_from_file( tmpfile )
+        matr3 = asdf.get_surface(0).get_datamatrix_of_surfacematrix()
+        mysurfmap = asdf.get_surface(0).get_surfacemap()
+
+        testarray = [0.0, 0.07142857, 0.1428571, 0.2142857, 0.2857143, 0.3571429, 0.4285714, 0.5, 0.5714286, 0.6428571, 0.7142857, 0.7857143, 0.8571429, 0.9285714, 1.0]
+        self.assertTrue( np.allclose( testarray, mysurfmap.uplength ) )
+        self.assertTrue( np.allclose( testarray, mysurfmap.leftlength ) )
+        self.assertTrue( np.allclose( testarray, mysurfmap.downlength ) )
+        self.assertTrue( np.allclose( testarray, mysurfmap.rightlength ) )
 
 
 
