@@ -108,7 +108,7 @@ class plysurfacehandler():
     def complete_surfaces_with_map( self ):
         for index in range( self.get_number_surfaces() ):
             surf = self.get_surface( index )
-            if surf.mapping == None:
+            if surf.mapping is None:
                 surfmap = self.create_surfacemap( index )
                 surf.add_surfacemap( surfmap )
 
