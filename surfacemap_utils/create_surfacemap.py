@@ -2,7 +2,6 @@ from scipy.sparse import lil_matrix, dok_matrix
 from scipy.sparse.linalg import spsolve
 from scipy.spatial import Delaunay
 from scipy.interpolate import CloughTocher2DInterpolator, LinearNDInterpolator
-from scipy.sparse.linalg import spsolve
 from scipy.signal import convolve
 import itertools
 import numpy as np
@@ -15,20 +14,32 @@ from numpy.typing import ArrayLike
 
 
 def create_gridmap_from( up, left, down, right, \
-                    vertexpositions:Iterable[Tuple[float,float,float]], edges ):
+                    vertexpositions:Iterable[Tuple[float,float,float]], edges,\
+                    vertexlist = None ):
     """
     :todo: instead of linspace use all used u and v positions as crossproduct
     """
-    number_vertices = len( vertexpositions )
-    edges = set( frozenset(e) for e in edges )
-    edges = list( tuple(e) for e in edges )
+    edges = set( frozenset(e) for e in edges \
+            if all( ve in vertexlist for ve in e ) )
+    translator = { v: i for i, v in enumerate( vertexlist ) }
+    edges = list( tuple( translator[ ve ] for ve in e) for e in edges )
+
+    vertexpositions = list( vertexpositions )
+    vertexpositions = [ vertexpositions[ i ] \
+                        for i in sorted( translator.keys(), key=translator.get)]
+    up = [ translator[ vold ] for vold in up ]
+    left = [ translator[ vold ] for vold in left ]
+    right = [ translator[ vold ] for vold in right ]
+    down = [ translator[ vold ] for vold in down ]
+
+
     roughgridshape = (40, 40)
-    ulength, vlength = 15, 15
+    ulength, vlength = 50, 50
     # rough estimation of uv-pos of vertices
 
-    u_array, v_array = _estimate_uv_from_edgegrid( number_vertices, \
-                                        edges, vertexpositions, \
-                                        up, left, down, right )
+    u_array, v_array = _estimate_uv_from_edgegrid( edges, vertexpositions, \
+                                                    up, left, down, right )
+    #raise Exception( max( up ), len(vertexpositions ), len( u_array), len(v_array))
     borderindices = set(itertools.chain(up,left,down,right))
 
     # minimize the discrepancy between edgelength of real-pos and uv-pos
@@ -41,7 +52,8 @@ def create_gridmap_from( up, left, down, right, \
     #u_array, v_array = params_to_uv_arrays( np.array(foundparams.x) )
 
     # generate uv to position generator from verticeposition
-    uv_to_xyz = generate_surfaceinterpolator( vertexpositions, u_array, v_array)
+    uv_to_xyz = generate_surfaceinterpolator( vertexpositions, \
+                                                u_array, v_array)
     #todo: instead of linspace use all used u and v positions as crossproduct
     s_array = np.linspace(0,1,roughgridshape[0])
     t_array = np.linspace(0,1,roughgridshape[1])
@@ -50,6 +62,7 @@ def create_gridmap_from( up, left, down, right, \
         for j, t in enumerate( t_array ):
             datamatrix[i,j,:] = uv_to_xyz( s, t )
     firstsurfmap = surfacemap( s_array, t_array, datamatrix )
+    #firstsurfmap.visualize_with_matplotlib()
 
     # generate grid and minimize deviation of real distances of gridvertices
     grid_u, grid_v = np.meshgrid( np.linspace(0,1,vlength), \
@@ -62,6 +75,7 @@ def create_gridmap_from( up, left, down, right, \
 
     secondsurfmap = surfacemap( np.linspace(0,1,ulength), \
                                 np.linspace(0,1,vlength), grid_xyz )
+    #secondsurfmap.visualize_with_matplotlib()
     return secondsurfmap
 
 
@@ -280,8 +294,8 @@ def _create_edgeutils( edges, vertexpositions:List[Tuple[float,...]] ) \
     return real_edgelength, get_uv_edgelength, uv_arrays_to_force
 
 
-def _estimate_uv_from_edgegrid( number_vertices, edges, vertexpositions, \
-                                            up, left, down, right ):
+def _estimate_uv_from_edgegrid( edges, vertexpositions, up, left, down, right ):
+    number_vertices = len( vertexpositions )
     randnodes_indices = set( itertools.chain( up, left, down, right ))
     interaction_matrix = _create_spring_interaction_matrix( edges, \
                                             randnodes_indices, number_vertices,\
@@ -289,6 +303,8 @@ def _estimate_uv_from_edgegrid( number_vertices, edges, vertexpositions, \
     startpositions_u, startpositions_v = _create_initcondition_for_uv_finding(\
                                             number_vertices, vertexpositions, \
                                             up, left, down, right )
+    #print( startpositions_u )
+    #print( interaction_matrix )
     u_array = spsolve( interaction_matrix, startpositions_u )
     v_array = spsolve( interaction_matrix, startpositions_v )
     return u_array, v_array
@@ -301,12 +317,18 @@ def _create_spring_interaction_matrix( edges, border_indices, number_vertices, \
     interaction_matrix = lil_matrix( (number_vertices, number_vertices) )
     edgelength_from = lambda a, b: np.linalg.norm( \
                         np.subtract(vertexpositions[a], vertexpositions[b]))
+    maximuminverse = -np.infty
+    #minimuminverse = np.infty
     for a, b in edges:
-        inverselength = 1/edgelength_from(a, b)
-        interaction_matrix[ a, b ] = inverselength
-        interaction_matrix[ b, a ] = inverselength
+        #inverselength = (1/edgelength_from(a, b)) / 5000
+        inverselength = 1
+        interaction_matrix[ a, b ] += inverselength
+        interaction_matrix[ b, a ] += inverselength
         interaction_matrix[ a, a ] += -inverselength
         interaction_matrix[ b, b ] += -inverselength
+        maximuminverse = max( maximuminverse, inverselength )
+        #minimuminverse = min( minimuminverse, inverselength )
+    interaction_matrix /= maximuminverse
     for i in border_indices:
         for j in range( number_vertices ):
             interaction_matrix[ i, j ] = 0

@@ -124,7 +124,7 @@ class surfacemap():
         from matplotlib import cm
 
         fig = plt.figure()
-        ax = fig.gca( projection='3d' )
+        ax = plt.axes( projection='3d' )
         surf = ax.plot_wireframe( *(self.datamatrix[:,:,i] for i in (0,1,2) ) )
 
         #x_test = np.linspace(0,1)

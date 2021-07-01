@@ -128,10 +128,14 @@ class plysurfacehandler():
 
         surf = self.get_surface( index )
         up, left, down, right = surf.get_borders()
+        extraoptions = {}
+        if surf.vertexlist is not None:
+            extraoptions["vertexlist"] = surf.vertexlist
         vertexpositions = list( vertexpositions )
         surfmap = surfacemap_utils.create_gridmap_from( \
                                                     up, left, down, right, \
-                                                    vertexpositions, edges )
+                                                    vertexpositions, edges,\
+                                                    **extraoptions )
         return surfmap
 
     def get_vertexpositions( self ) -> Iterator[ Iterator[float] ]:
