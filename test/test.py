@@ -111,6 +111,21 @@ class test_asdf( unittest.TestCase ):
             self.assertIsNotNone( matr3 )
             self.assertTrue( np.allclose( matr1, np.array(matr3) ))
 
+    def test_complete_and_save_gridmaps_big( self ):
+        tmpfile = os.path.join( testpath, "testbig.ply" )
+        asdf = main.plysurfacehandler.load_from_file( tmpfile )
+        asdf.complete_surfaces_with_map()
+        matr1 = np.array( asdf.get_surface(0).get_datamatrix_of_surfacematrix())
+        matr2 = np.array( asdf.get_surface(0).get_surfacemap().datamatrix)
+        self.assertTrue( np.allclose( matr1, matr2 ))
+        with tempfile.TemporaryDirectory() as tmpdir:
+            filepath = os.path.join( tmpdir, "tmpfile.ply" )
+            asdf.save_to_file( filepath )
+            qwer = main.plysurfacehandler.load_from_file( filepath )
+            matr3 = qwer.get_surface(0).get_datamatrix_of_surfacematrix()
+            self.assertIsNotNone( matr3 )
+            self.assertTrue( np.allclose( matr1, np.array(matr3) ))
+
     def test_get_lengths( self ):
         tmpfile = os.path.join( testpath, "singlesurface_with_map.ply" )
         asdf = main.plysurfacehandler.load_from_file( tmpfile )
