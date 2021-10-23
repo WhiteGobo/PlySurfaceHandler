@@ -7,7 +7,12 @@ class NoValidBorder( Exception ):
 
 def get_border_from_faces( rightup:int, leftup:int, \
                             leftdown:int, rightdown:int, \
-                            faces:Iterable[Iterable[int]] ) -> Iterable[int]:
+                            faces:Iterable[Iterable[int]] ) \
+                            ->Tuple[ Iterable[int],...]:
+    """
+
+    :rtype: Tuple[ Tuple[int],Tuple[int],Tuple[int],Tuple[int]]
+    """
     edges = ( itertools.chain( *(zip( f[:], f[1:]+f[:1] ) for f in faces )))
     edges = ( frozenset( e ) for e in edges )
     #edges = list( tuple(e) for e in edges )

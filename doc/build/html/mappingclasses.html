@@ -1,0 +1,222 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Surfacemaps &#8212; plysurfacehandler  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Howto" href="howto.html" />
+    <link rel="prev" title="plysurfacehandler" href="main.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-plysurfacehandler.surfacemap_utils">
+<span id="surfacemaps"></span><h1>Surfacemaps<a class="headerlink" href="#module-plysurfacehandler.surfacemap_utils" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.create_gridmap_from">
+<span class="sig-prename descclassname"><span class="pre">plysurfacehandler.surfacemap_utils.</span></span><span class="sig-name descname"><span class="pre">create_gridmap_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">up</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">down</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertexpositions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertexlist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#plysurfacehandler.surfacemap_utils.create_gridmap_from" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Todo</dt>
+<dd class="field-odd"><p>instead of linspace use all used u and v positions as crossproduct</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.surfacemap">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">plysurfacehandler.surfacemap_utils.</span></span><span class="sig-name descname"><span class="pre">surfacemap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s_array</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_array</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datamatrix</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#plysurfacehandler.surfacemap_utils.surfacemap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to map a 2d-quadrat(1.0x1.0) to a multidimensional surface.    2d-space is defined by 2 arrays. The available points in the 2d-space     is the product of those arrays.     The multidimensional surface is defined by a datamatrix (2+x)D.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>datamatrix</strong> – Datamatrix with an x-dimensional array per vertice</p></li>
+<li><p><strong>s_array</strong> – Array corresponding to the first dimension (s[0] c ma[0][x])</p></li>
+<li><p><strong>t_array</strong> – Array corresponding to the second dimension (s[0] c ma[x][0])</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.surfacemap.uplength">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">uplength</span></span><em class="property"><span class="pre">:</span> <span class="pre">float</span></em><a class="headerlink" href="#plysurfacehandler.surfacemap_utils.surfacemap.uplength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Length of the upperborder of the surface. Corresponds to s-array     at t=max.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.surfacemap.leftlength">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">leftlength</span></span><em class="property"><span class="pre">:</span> <span class="pre">float</span></em><a class="headerlink" href="#plysurfacehandler.surfacemap_utils.surfacemap.leftlength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Length of the leftborder of the surface. Corresponds to t-array     at s=0</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.surfacemap.downlength">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">downlength</span></span><em class="property"><span class="pre">:</span> <span class="pre">float</span></em><a class="headerlink" href="#plysurfacehandler.surfacemap_utils.surfacemap.downlength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Length of the lower border of the surface. Corresponds to s-array
+at t=0</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.surfacemap.rightlength">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">rightlength</span></span><em class="property"><span class="pre">:</span> <span class="pre">float</span></em><a class="headerlink" href="#plysurfacehandler.surfacemap_utils.surfacemap.rightlength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Length of the rightborder of the surface. Corresponds to t-array     at s=max</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.surfacemap.get_point_matrix">
+<span class="sig-name descname"><span class="pre">get_point_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#plysurfacehandler.surfacemap_utils.surfacemap.get_point_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all points of the space in matrixform. If 2D-arrays are         equidistant only return 3d_space in matrixform.         Else returns a matrix with the first 2 entry of         the s- and t-array-data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tuple[ Tuple[ float,… ]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.surfacemap.get_value_to_st">
+<span class="sig-name descname"><span class="pre">get_value_to_st</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#plysurfacehandler.surfacemap_utils.surfacemap.get_value_to_st" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms a 2D-point to the corresponding value on the surface</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.surfacemap.get_derivate_to_st">
+<span class="sig-name descname"><span class="pre">get_derivate_to_st</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#plysurfacehandler.surfacemap_utils.surfacemap.get_derivate_to_st" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms a 2Dpoint to the corresponding derivate on the surface</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>return len(tuple)==2 is derivate in the 
+two direction dx,dy at position x, y</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.surfacemap.get_transmatrix_dxyz_to_dst">
+<span class="sig-name descname"><span class="pre">get_transmatrix_dxyz_to_dst</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#plysurfacehandler.surfacemap_utils.surfacemap.get_transmatrix_dxyz_to_dst" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.surfacemap.from_datamatrix">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_datamatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datamatrix</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#plysurfacehandler.surfacemap_utils.surfacemap.from_datamatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates this Object with a Datamatrix with the pointposition
+s and t-array will be equidistant</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.surfacemap.from_arrays">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_arrays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">arrays</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#plysurfacehandler.surfacemap_utils.surfacemap.from_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates this Object from data in stream-form(N * 1D-arrays).
+The shape of the resulting datamatrix must be given extra.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.surfacemap.from_arrays_with_nonregular_xyarrays">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_arrays_with_nonregular_xyarrays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_array</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_array</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">arrays</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#plysurfacehandler.surfacemap_utils.surfacemap.from_arrays_with_nonregular_xyarrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates this Object from data in stream-form(N * 1D-arrays).
+The s and t-array of the map must be given.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.surfacemap.visualize_with_matplotlib">
+<span class="sig-name descname"><span class="pre">visualize_with_matplotlib</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#plysurfacehandler.surfacemap_utils.surfacemap.visualize_with_matplotlib" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">plysurfacehandler</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="main.html">plysurfacehandler</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Surfacemaps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="howto.html">Howto</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="main.html" title="previous chapter">plysurfacehandler</a></li>
+      <li>Next: <a href="howto.html" title="next chapter">Howto</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Richard Fechner.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/mappingclasses.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

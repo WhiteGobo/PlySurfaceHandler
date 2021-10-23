@@ -32,14 +32,20 @@ class vertex():
         return all( conditions )
 
 class surface():
+    """Container for data of surface.
+
+    :ivar mapping: 2dMatrix with max-3d-position
+    :type mapping: Tuple[Tuple[Position,...],...]
+    :ivar rightup: Index of vertice in the rightup-corner
+    :ivar rightdown: Index of vertice in the rightdown-corner
+    :ivar leftup: Index of vertice in the leftup-corner
+    :ivar leftdown: Index of vertice in the leftdown-corner
+    """
     def __init__( self, rightup=None, leftup=None, leftdown=None, \
                                 rightdown=None, surfacename=None, \
                                 vertexlist:Iterator[int]=None, \
                                 faceindices:Iterator[Iterator[int]] =None,\
                                 mapping:Tuple[Tuple[Position,...],...]=None):
-        """
-        :todo: remove raise Exception
-        """
         clist = (rightup, leftup, leftdown, rightdown)
         if not any( (all(c is None for c in clist), \
                     all(c is not None for c in clist)) ):
@@ -66,17 +72,36 @@ class surface():
         self.vertex_trans = vertex_trans
         self.used_faces = used_faces
 
-    def add_surfacemap( self, surfacemap:surfacemap_utils.surfacemap ):
-         datamatrix = surfacemap.get_point_matrix()
-         self.mapping = datamatrix
-    
     def get_surfacemap( self ):
+        """Get a surfacemap to the mapping.
+
+        :rtype: surfacemap_utils.surfacemap
+        """
         return surfacemap_utils.surfacemap.from_datamatrix( self.mapping )
 
     def get_datamatrix_of_surfacematrix( self ):
+        """
+
+        :return: surface data of gridpositions
+        :rtype: Tuple[ Tuple[ Position ],... ]
+        """
         return self.mapping
 
     def get_borders( self ):
+        """Returns the border of the surface.
+
+        :return: all subborders as indexlist of vertices. The returned borders
+                are in this order: up, left, down, right. The order of the
+                vertices in the borders:
+
+                    * up: uppright - upleft
+                    * left: upleft - downleft
+                    * down: downleft - downright
+                    * right: downright - upright
+        :rtype: Tuple[ Tuple[int,...], Tuple[int,...], 
+                Tuple[int,...],Tuple[int,...]]
+
+        """
         from . import utils
         params =(self.rightup, self.leftup, self.leftdown, self.rightdown, \
                     self.used_faces )
@@ -91,7 +116,30 @@ class surface():
                         if all( index in vertexmask for index in face ) ]
         return vertex_trans, used_faces
 
+    def add_surfacemap( self, surfacemap:surfacemap_utils.surfacemap ):
+        """Should only be called by plysurfacecontainer."""
+        datamatrix = surfacemap.get_point_matrix()
+        self.mapping = datamatrix
+    
+
 class plysurfacehandler():
+    """Container for data of data for ply-file.
+    The data is divided in 2 parts. *First* in the file 1 connected 3d-object
+    is saved. The object is described via :
+
+        * vertices with their 3d-position,
+        * edges with the 2 indices of the corresponding vertices 
+        * and faces with a list of indices of corresponding edges
+
+    The *second* part is the description of surfaces of the object. These
+    surfaces are described minimal via 4 borders, which are a list of
+    connected edges. These four border are the 4 cardinal direction 
+    up, right, down and left.
+
+    Additional every surface can have a map which translates every 3d-point
+    on the surface to a 2d-map
+
+    """
     def __init__( self, vertexlist: Iterator[ vertex ] = None, \
                     facelist: Iterator[ face ] = None, \
                     surfacelist: Iterator[ surface ] = None ):
@@ -106,6 +154,12 @@ class plysurfacehandler():
             assert type( surfacelist[0] ) ==surface,"plysurfhandler worng input"
 
     def complete_surfaces_with_map( self ):
+        """Create for every Surface a 2d-map. This map has for every point on
+        the surface a corresponding 2d-point. See create_surfacemap for more
+        information
+
+        :raises: {NoSurfaceForMap}, {IndexError}
+        """
         for index in range( self.get_number_surfaces() ):
             surf = self.get_surface( index )
             if surf.mapping is None:
@@ -113,7 +167,9 @@ class plysurfacehandler():
                 surf.add_surfacemap( surfmap )
 
     def create_surfacemap( self, index ):
-        """
+        """Create for the Surface with index a 2d-map. This map has for 
+        every point on the surface a corresponding 2d-point.
+
         :raises: {NoSurfaceForMap}, {IndexError}
         """
         if self._surfacelist is None:
@@ -139,11 +195,13 @@ class plysurfacehandler():
         return surfmap
 
     def get_vertexpositions( self ) -> Iterator[ Iterator[float] ]:
-        """
-        Returns the vertices as positiontuples, eg: [(0,1,2),(3,4,5)]
+        """Returns the vertices as positiontuples, eg: [(0,1,2),(3,4,5)]
         automaticly recognizes how many coordinates there are (1,2 or 3)
         in case of only one coordinate available list contains instead of
         tuples the coordinates directly, eg: [0,3]
+
+        :return: A list of the position of each point
+        :rtype: Iterator[ Tuple[float, float, float] ]
         """
         if self._vertices[0].z is not None:
             for v in self._vertices:
@@ -156,6 +214,11 @@ class plysurfacehandler():
                 yield v.x
 
     def get_faceindices( self ) -> Iterator[ Iterator[int] ]:
+        """Every face is described by the indices of the corresponding edges
+
+        :return: Gives back every face as tuple of edgeindices
+        :rtype: Iterator[ Tuple[ int ]]
+        """
         for f in self._facelist:
             yield f.vertex_indices
 
@@ -163,12 +226,16 @@ class plysurfacehandler():
         return len( self._surfacelist ) if self._surfacelist is not None else 0
 
     def get_surface( self, index:int ) -> Iterator[ surface ]:
+        """Returns an object for saving all available data to surface.
+
+        :rtype: surface
+        """
         surf = self._surfacelist[ index ]
         return surf
 
     def check_valid( self ):
-        """
-        tests if data is not corrupted
+        """tests if data is not corrupted
+
         :todo: complete this function
         """
         vertexiterator = iter( self.vertexdata )
@@ -194,6 +261,7 @@ class plysurfacehandler():
     #            vertex.z = tmpz
 
     def save_to_file( self, filename:str, use_ascii=True, use_bigendian=False ):
+        """Method to save data to plyfile"""
         vertexinfo = self._create_vertexinfo_for_plyobject()
         faceinfo = self._create_faceinfo_for_plyobject()
         partialsurfaceinfo = self._create_surfaceinfo_for_plyobject()
@@ -276,6 +344,7 @@ class plysurfacehandler():
 
     @classmethod
     def load_from_file( cls, filepath:str ):
+        """Load data from file"""
         plyobj = PlyObject.load_from_file( filepath )
         vertexdata, number_vertices = _get_vertexdata( plyobj )
         facedata, number_faces = _get_facedata( plyobj )
