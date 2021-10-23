@@ -104,11 +104,15 @@ at t=0</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.surfacemap.get_derivate_to_st">
 <span class="sig-name descname"><span class="pre">get_derivate_to_st</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#plysurfacehandler.surfacemap_utils.surfacemap.get_derivate_to_st" title="Permalink to this definition">¶</a></dt>
-<dd><p>Transforms a 2Dpoint to the corresponding derivate on the surface</p>
+<dd><p>Transforms a 2Dpoint to the corresponding derivate dst-to-dxyz 
+on the surface.         The derivative is given by a 2xN-Matrix at each point.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>return len(tuple)==2 is derivate in the 
 two direction dx,dy at position x, y</p>
+</dd>
+<dt class="field-even">Todo</dt>
+<dd class="field-even"><p>give source for more detailled explanation</p>
 </dd>
 </dl>
 </dd></dl>
@@ -116,7 +120,18 @@ two direction dx,dy at position x, y</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.surfacemap.get_transmatrix_dxyz_to_dst">
 <span class="sig-name descname"><span class="pre">get_transmatrix_dxyz_to_dst</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#plysurfacehandler.surfacemap_utils.surfacemap.get_transmatrix_dxyz_to_dst" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Transforms a 2Dpoint to the corresponding derivate dxyz-to-dst
+on the surface. The derivative is given by a Nx2-Matrix at each point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>return len(tuple)==2 is derivate in the 
+two direction dx,dy at position x, y</p>
+</dd>
+<dt class="field-even">Todo</dt>
+<dd class="field-even"><p>give source for more detailled explanation</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="plysurfacehandler.surfacemap_utils.surfacemap.from_datamatrix">
