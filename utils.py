@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Tuple
 import itertools
 from collections import Counter
 
